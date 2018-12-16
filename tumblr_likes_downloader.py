@@ -3,12 +3,13 @@ import os
 import pytumblr
 import re
 import urllib.request
+import json
 
 client = pytumblr.TumblrRestClient(
-    '<consumer_key>',
+	'<consumer_key>',
     '<consumer_secret>',
     '<oauth_token>',
-    '<oauth_secret>',
+    '<oauth_secret>'
 )
 
 def media_download(mylikes, dirname):
@@ -59,13 +60,19 @@ def media_download(mylikes, dirname):
 			while index < len(url_aux):
 				if url_aux[index] == 'h' and url_aux[index + 1] == 't':
 					url = ""
-					while url_aux[index] <> '"':
+					while url_aux[index] != '"':
 						url = url + url_aux[index]
 						index = index + 1
-					if (re.findall(r'tumblr_\w+.\w+', url)) <> []:
+						if (index == len(url_aux)):
+							filename = enumerator + '.html'
+							print(mylikes['liked_posts'][i],  file=open(filename, 'w'))
+							break
+					if (re.findall(r'tumblr_\w+.\w+', url)) != []:
 						break
 				index = index + 1		
 			name = re.findall(r'tumblr_\w+.\w+', url)
+			if (len(name) == 0):
+				break
 			filename = enumerator + ' - ' + name[0]
 			for file in os.listdir('.'):
 				if re.search(name[0], file):
@@ -81,6 +88,14 @@ def media_download(mylikes, dirname):
 				else:
 					countDownloads += 1
 		countAux = int(enumerator) - 1
+
+# def uprint(*objects, sep=' ', end='\n', file=sys.stdout):
+#     enc = file.encoding
+#     if enc == 'UTF-8':
+#         print(*objects, sep=sep, end=end, file=file)
+#     else:
+#         f = lambda obj: str(obj).encode(enc, errors='backslashreplace').decode(enc)
+#         print(*map(f, objects), sep=sep, end=end, file=file)
 
 def main():
 	global countAux
@@ -105,7 +120,8 @@ def main():
 	batchs = math.ceil(likedcounts / limit)
 	for i in range (0, batchs):
 		mylikes = client.likes(limit = 50, offset = offset_aux)
-		media_download(mylikes, dirname)
+		print(json.dumps(mylikes),  file=open('_mylikes.json', 'w'))
+		#media_download(mylikes, dirname)
 		offset_aux += limit
 	print("\n>> Downloaded files: {:d}".format(countDownloads))
 	print(">> Errors: {:d}".format(countErrors))
